@@ -1,11 +1,5 @@
 <?php
     header("Content-Type: text/javascript");
-    
-    function v ($x) {
-        //echo "<pre>";
-        print_r($x);
-        //echo "</pre>";
-    }
 
     class NineMenSMorris {
         
