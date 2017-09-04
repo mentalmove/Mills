@@ -49,8 +49,14 @@ function Interface (places, phase) {
         screen.style.fontFamily = "Verdana";
         screen.style.fontSize = "84px";
         screen.style.textAlign = "center";
-        screen.style.color = winner;
-        var s = winner + " wins";
+        if ( winner ) {
+            screen.style.color = winner;
+            var s = winner + " wins";
+        }
+        else {
+            screen.style.color = "#886666";
+            var s = "draw";
+        }
         screen.innerHTML = s.toUpperCase();
         document.body.appendChild(screen);
     };
