@@ -15,16 +15,6 @@ function Rules (view, places, init_callback) {
     var myself = this;
     
     
-    function load_script (url) {
-        var script_node = document.createElement("script");
-        script_node.setAttribute("type","text/javascript");
-        script_node.setAttribute("src", url);
-        document.getElementsByTagName("head")[0].appendChild(script_node);
-        script_node.onload = setTimeout(function (node) {
-            node.parentNode.removeChild(node);
-        }, 41, script_node);
-    }
-    
     function builds_mill (index, colour_indicator) {
         var tmp, trio, lowest, highest;
         if ( index % 2 ) {
