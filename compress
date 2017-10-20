@@ -1,0 +1,15 @@
+#!/bin/sh
+
+
+COMPRESSOR=PATH_TO_COMPRESSOR
+
+for directory in $(ls); do
+    if [[ -d $directory ]]; then
+        if [[ $directory != *nbproject* && $directory != *styles* ]]; then
+            for file in $(ls $(pwd)/$directory/*_max.js); do
+                echo java -jar $COMPRESSOR $file -o ${file//_max.js/.js}
+                java -jar $COMPRESSOR $file -o ${file//_max.js/.js}
+            done
+        fi
+    fi
+done
