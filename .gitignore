@@ -2,3 +2,4 @@
 *.xml
 
 nbproject/private/private.xml
+*.properties
