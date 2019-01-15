@@ -326,8 +326,7 @@ function Rules () {
                 piece_moved(event.data.from, event.data.to, machine_colour);
             break;
             case "remove_piece":
-                setTimeout(piece_removed, 1001, event.data.place, human_colour);
-                //piece_removed(event.data.place, human_colour);
+                piece_removed(event.data.place, human_colour);
             break;
             case "give_up":
                 game_over(human_colour);
