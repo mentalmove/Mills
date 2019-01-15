@@ -285,7 +285,6 @@ function Rules () {
                 value = numeric_colours[has_piece];
             board[i] = value;
         }
-        //msg.board = board;
         
         var url = "model/?";
         for ( var prop in msg )
