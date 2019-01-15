@@ -170,8 +170,6 @@ function Rules () {
     
     function piece_moved (source_index, target_index, colour, piece) {
         
-        //console.log( source_index + " => " + target_index + " " + colour + "; human: " + (colour == human_colour) );
-        
         if ( colour == human_colour ) {
             var slides = get_slides(colour);
             for ( var i = 0; i < slides.length; i++ )
@@ -336,79 +334,6 @@ function Rules () {
             break;
         }
     };
-    
-    // [0, 0, 0, 0, 0, 0, -1, 1, -1, -1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0]
-    
-/*var test = [
-        0,
-  0,
-  0,
-  1,
-  -1,
-  1,
-  0,
-  0,
-  -1,
-        1,
-  0,
-  -1,
-  -1,
-  1,
-  0,
-  0,
-  -1,
-  1,
-  -1,
-  0,
-  -1,
-  1,
-  -1,
-  0
-];
-for ( var t = 0; t < test.length; t++ ) {
-    if ( !test[t] )
-        continue;
-    if ( test[t] > 0 )
-        places[t].set_piece(initial_pieces[human_colour].pop());
-    else
-        places[t].set_piece(initial_pieces[machine_colour].pop());
-}
-initial_pieces.white = [];
-initial_pieces.black = [];
-actual_colour = machine_colour;*/
-    
-    //places[0].set_piece(initial_pieces[machine_colour].pop());
-    //places[1].set_piece(initial_pieces[machine_colour].pop());
-    //places[2].set_piece(initial_pieces[machine_colour].pop());
-    //places[3].set_piece(initial_pieces[machine_colour].pop());
-    //places[14].set_piece(initial_pieces[machine_colour].pop());
-    
-    //places[8].set_piece(initial_pieces[human_colour].pop());
-    //places[9].set_piece(initial_pieces[human_colour].pop());
-    //places[10].set_piece(initial_pieces[human_colour].pop());
-    //places[12].set_piece(initial_pieces[human_colour].pop());
-    //places[13].set_piece(initial_pieces[human_colour].pop());
-    
-    /*places[0].set_piece(initial_pieces[human_colour].pop());
-    places[1].set_piece(initial_pieces[human_colour].pop());
-    places[2].set_piece(initial_pieces[machine_colour].pop());
-    places[3].set_piece(initial_pieces[machine_colour].pop());
-    places[4].set_piece(initial_pieces[human_colour].pop());
-    places[5].set_piece(initial_pieces[human_colour].pop());
-    places[6].set_piece(initial_pieces[machine_colour].pop());
-    places[7].set_piece(initial_pieces[machine_colour].pop());
-    
-    places[8].set_piece(initial_pieces[machine_colour].pop());
-    places[9].set_piece(initial_pieces[machine_colour].pop());
-    places[10].set_piece(initial_pieces[human_colour].pop());
-    places[11].set_piece(initial_pieces[human_colour].pop());
-    places[12].set_piece(initial_pieces[machine_colour].pop());
-    places[13].set_piece(initial_pieces[machine_colour].pop());
-    places[14].set_piece(initial_pieces[human_colour].pop());
-    places[15].set_piece(initial_pieces[human_colour].pop());
-    
-    places[16].set_piece(initial_pieces[human_colour].pop());
-    places[17].set_piece(initial_pieces[machine_colour].pop());*/
     
     
     if ( actual_colour == human_colour )
