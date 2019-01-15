@@ -1,18 +1,258 @@
-function Rules (view, places, init_callback) {
+var human_colour = "white";
+var machine_colour = "black";
+
+function Rules () {
     
-    //var view;                                                                 // argument
-    //var places;                                                               // argument
+    var actual_colour = "white";
     
-    var pieces_to_set = {
-        white: 9,
-        black: 9
+    var numeric_colours = {
+        white: 1,
+        black: -1
     };
     
-    var board = [];
+    var expected_answer_counter = 1;
     
-    var myself = this;
+    var RETARDITION = 10001;
     
+    /*  */
     
+    function get_jump_targets (sources, colour) {
+        var targets = [];
+        var has_piece;
+        for ( var i = 0; i < places.length; i++ ) {
+            has_piece = places[i].has_piece;
+            if ( !has_piece )
+                targets.push(places[i]);
+            else {
+                if ( sources && (!colour || colour == has_piece) )
+                    sources.push(places[i]);
+            }
+                
+        }
+        return targets;
+    }
+    function get_slides (colour) {
+        var slides = [];
+        var tmp, j;
+        for ( var i = 0; i < places.length; i++ ) {
+            if ( places[i].has_piece == colour ) {
+                tmp = [];
+                for ( j = 0; j < Library.neighbours[i].length; j++ ) {
+                    if ( !places[Library.neighbours[i][j]].has_piece )
+                        tmp.push( places[Library.neighbours[i][j]] );
+                }
+                if ( tmp.length )
+                    slides.push([places[i], tmp]);
+            }
+        }
+        return slides;
+    }
+    
+    function check_builds_mill (index, colour) {
+        var mills = Library.mills[index];
+        var j, result;
+        for ( var i = 0; i < mills.length; i++ ) {
+            result = 0;
+            for ( j = 0; j < 3; j++ ) {
+                if ( mills[i][j] == index )
+                    continue;
+                if ( places[mills[i][j]].has_piece && places[mills[i][j]].has_piece == colour )
+                    result++;
+                else
+                    break;
+            }
+            if ( result == 2 )
+                return true;
+        }
+        return false;
+    }
+    
+    /*  */
+    
+    function piece_removed (index, colour) {
+        
+        for ( var i = 0; i < places.length; i++ )
+            places[i].disable_remove();
+        
+        var validated = true;
+        if ( places[index].has_piece != colour )
+            validated = false;
+        if ( !validated ) {
+            enable_remove(colour);
+            return;
+        }
+        
+        places[index].remove_piece();
+        
+        var counter = 0;
+        for ( var i = 0; i < places.length; i++ ) {
+            if ( places[i].has_piece == colour )
+                counter++;
+        }
+        if ( (counter + initial_pieces[colour].length) < 3 ) {
+            game_over(actual_colour);
+            return;
+        }
+        
+        toggle_actor();
+    }
+    function enable_remove (colour) {
+        
+        indicate_thinking(actual_colour);
+        
+        var i;
+        
+        if ( actual_colour == human_colour ) {
+            var not_in_mill = [];
+            var is_in_mill = [];
+            var has_piece;
+            var other_colour = (actual_colour == "white") ? "black" : "white";
+            for ( var i = 0; i < places.length; i++ ) {
+                has_piece = places[i].has_piece;
+                if ( !has_piece || has_piece == actual_colour )
+                    continue;
+                if ( check_builds_mill(i, other_colour) )
+                    is_in_mill.push(places[i]);
+                else
+                    not_in_mill.push(places[i]);
+            }
+            var removable = (not_in_mill.length) ? not_in_mill : is_in_mill;
+            
+            if ( !removable.length ) {
+                game_over(actual_colour);
+                return;
+            }
+            
+            for ( var i = 0; i < removable.length; i++ )
+                removable[i].enable_remove(piece_removed);
+        }
+        else {
+            
+        }
+    }
+    
+    function piece_set (index, colour) {
+        
+        for ( var i = 0; i < places.length; i++ )
+            places[i].disable_set();
+        
+        var validated = true;
+        if ( !initial_pieces[colour] || !initial_pieces[colour].length )
+            validated = false;
+        if ( places[index].has_piece )
+            validated = false;
+        if ( !validated ) {
+            if ( colour == human_colour )
+                human_move();
+            else
+                machine_move(expected_answer_counter);
+            return;
+        }
+        
+        var builds_mill = check_builds_mill(index, colour);
+        
+        places[index].set_piece(initial_pieces[colour].pop());
+        if ( builds_mill ) {
+            var other_colour = (colour == "white") ? "black" : "white";
+            if ( colour == human_colour )
+                enable_remove(other_colour);
+            else
+                machine_move(expected_answer_counter, true);
+        }
+        else
+            toggle_actor();
+    }
+    function enable_set () {
+        var targets = get_jump_targets();
+        for ( var i = 0; i < targets.length; i++ )
+            targets[i].enable_set(piece_set);
+    }
+    
+    function piece_moved (source_index, target_index, colour, piece) {
+        
+        if ( colour == human_colour ) {
+            var slides = get_slides(colour);
+            for ( var i = 0; i < slides.length; i++ )
+                slides[i][0].disable_move();
+            if ( piece ) {
+                places[source_index].unset_piece();
+                places[target_index].set_piece(piece);
+            }
+            else {
+                places[source_index].remove_piece(true);
+                places[target_index].set_piece(new Piece(colour));
+            }
+        }
+        else {
+            if ( !places[source_index] ) {
+                places[source_index].remove_piece(true);
+                places[target_index].set_piece(new Piece(colour));
+            }
+            else
+                places[source_index].move(places[target_index]);
+        }
+        
+        var builds_mill = check_builds_mill(target_index, colour);
+        if ( builds_mill ) {
+            if ( colour == human_colour )
+                enable_remove(machine_colour);
+            else
+                machine_move(expected_answer_counter, true);
+            return;
+        }
+        
+        setTimeout(toggle_actor, 41);
+    }
+    function enable_move () {
+        var slides = get_slides(human_colour);
+        if ( !slides.length ) {
+            game_over(machine_colour);
+            return;
+        }
+        for ( var i = 0; i < slides.length; i++ )
+            slides[i][0].enable_move(slides[i][1], piece_moved);
+    }
+    
+    function enable_jump () {
+        
+        var sources = [];
+        var targets = get_jump_targets(sources, human_colour);
+        
+        if ( sources.length > 3 ) {
+            enable_move();
+            return;
+        }
+        
+        for ( var i = 0; i < sources.length; i++ )
+            sources[i].enable_move(targets, piece_moved);
+    }
+    
+    /*  */
+    
+    function human_move () {
+        
+        indicate_thinking();
+        
+        if ( initial_pieces[human_colour].length ) {
+            enable_set();
+            return;
+        }
+        
+        var counter = 0;
+        for ( var i = 0; i < places.length; i++ ) {
+            if ( places[i].has_piece == human_colour )
+                counter++;
+        }
+        if ( counter < 3 ) {
+            game_over(machine_colour);
+            return;
+        }
+        if ( counter == 3 ) {
+            enable_jump(human_colour);
+            return;
+        }
+        enable_move(human_colour);
+    }
     function load_script (url) {
         var script_node = document.createElement("script");
         script_node.setAttribute("type","text/javascript");
@@ -21,289 +261,95 @@ function Rules (view, places, init_callback) {
         script_node.onload = setTimeout(function (node) {
             node.parentNode.removeChild(node);
         }, 41, script_node);
-    }
-    
-    function builds_mill (index, colour_indicator) {
-        var tmp, trio, lowest, highest;
-        if ( index % 2 ) {
-            tmp = index % 8;
-            /**
-             * Builds connection between the three squares
-             */
-            if ( board[tmp] == colour_indicator && board[tmp + 8] == colour_indicator && board[tmp + 16] == colour_indicator )
-                return true;
-            /**
-             * Is middle of line
-             */
-            trio = [(index - 1), index, (index + 1)];
-            if ( trio[2] % 8 == 0 )
-                trio[2] -= 8;
-            if ( board[trio[0]] == colour_indicator && board[trio[1]] == colour_indicator && board[trio[2]] == colour_indicator )
-                return true;
-        }
-        else {
-            /**
-             * Is corner of line...
-             */
-            lowest = Math.floor(index / 8) * 8;
-            highest = lowest + 7;
-            trio = [(index - 2), (index - 1), index];
-            while ( trio[0] < lowest )
-                trio[0] += 8;
-            while ( trio[1] < lowest )
-                trio[1] += 8;
-            if ( board[trio[0]] == colour_indicator && board[trio[1]] == colour_indicator && board[trio[2]] == colour_indicator )
-                return true;
-            /**
-             * ...or maybe corner of other line
-             */
-            trio = [index, (index + 1), (index + 2)];
-            while ( trio[2] > highest )
-                trio[2] -= 8;
-            while ( trio[1] > highest )
-                trio[1] -= 8;
-            if ( board[trio[0]] == colour_indicator && board[trio[1]] == colour_indicator && board[trio[2]] == colour_indicator )
-                return true;
-        }
+}
+    function machine_move (id, remove) {
         
-        return false;
-    }
-    
-    function enable_remove (no_mill) {
-        
-        var i;
-        var to_remove = [];
-        for ( i = 0; i < board.length; i++ ) {
-            if ( board[i] != -1 )
-                continue;
-            if ( no_mill && builds_mill(i, -1) )
-                continue;
-            to_remove.push(i);
-        }
-        
-        if ( no_mill && !to_remove.length ) {
-            enable_remove(false);
+        if ( expected_answer_counter != id )
             return;
-        }
         
-        for ( i = 0; i < to_remove.length; i++ )
-            places[to_remove[i]].enable_remove();
+        indicate_thinking(machine_colour);
         
-        view.en_dis_able_remove(true);
-    }
-    
-    function set_phase () {
-        var white = 0;
-        var black = 0;
-        for ( var i = 0; i < board.length; i++ ) {
-            if ( board[i] == 1 )
-                white++;
-            if ( board[i] == -1 )
-                black++;
-        }
-        view.phase = [ "lost", "lost" ];
-        if ( white == 3 )
-            view.phase[0] = "jump";
-        if ( black == 3 )
-            view.phase[1] = "jump";
-        if ( white > 3 )
-            view.phase[0] = "move";
-        if ( black > 3 )
-            view.phase[1] = "move";
-        if ( view.phase[0] == "lost" ) {
-            myself.game_end("black");
-            return;
-        }
-        if ( view.phase[1] == "lost" )
-            myself.game_end("white");
-    }
-    
-    function enable_jumps () {
-        
-        var possible_moves = {};
-        var empty_places = [];
-        var target_coordinates = [];
-        
-        var i;
-        for ( i = 0; i < board.length; i++ ) {
-            if ( board[i] == 0 ) {
-                empty_places.push(i);
-                places[i].update_location();
-                target_coordinates.push( places[i].style.location );
-            }
-        }
-        for ( i = 0; i < board.length; i++ ) {
-            if ( board[i] != 1 )
-                continue;
-            possible_moves[i] = empty_places;
-            places[i].update_location();
-        }
-        
-        for ( var prop in possible_moves )
-            places[parseInt(prop)].enable_move(empty_places, target_coordinates);
-    }
-    
-    function enable_moves () {
-        
-        var possible_moves = {};
-        var num_movable_pieces = 0;
-        var lower, higher, plus8, minus8, success, tmp, indices, i;
-        for ( i = 0; i < board.length; i++ ) {
-            if ( board[i] != 1 )
-                continue;
-            lower = (i % 8) ? i - 1 : i + 7;
-            higher = (i % 8 != 7) ? i + 1 : i - 7;
-            plus8 = -1;
-            minus8 = -1;
-            if ( i % 2 ) {
-                if ( i - 8 >= 0 )
-                    minus8 = i - 8;
-                if ( i + 8 < board.length )
-                    plus8 = i + 8;
-            }
-            tmp = [];
-            if ( !board[lower] )
-                tmp.push(lower);
-            if ( !board[higher] )
-                tmp.push(higher);
-            if ( plus8 != -1 && !board[plus8] )
-                tmp.push(plus8);
-            if ( minus8 != -1 && !board[minus8] )
-                tmp.push(minus8);
-            if ( tmp.length ) {
-                possible_moves[i] = tmp;
-                num_movable_pieces++;
-            }
-        }
-        
-        if ( !num_movable_pieces ) {
-            myself.game_end("black");
-        }
-        else {
-            for ( var prop in possible_moves ) {
-                places[parseInt(prop)].update_location();
-                tmp = [];
-                indices = [];
-                for ( i = 0; i < possible_moves[prop].length; i++ ) {
-                    places[possible_moves[prop][i]].update_location();
-                    tmp.push( places[possible_moves[prop][i]].style.location );
-                    indices.push( possible_moves[prop][i] );
-                }
-                places[parseInt(prop)].enable_move(indices, tmp);
-            }
-        }
-    }
-    
-    this.game_end = function (winner) {
-        view.game_end(winner);
-    };
-    
-    this.swap_pieces = function (old_index, new_index, colour) {
-        
-        view.status = "wait";
-        
-        places[old_index].remove_piece();
-        places[new_index].set_piece(colour);
-        board[old_index] = 0;
-        board[new_index] = (colour == "white") ? 1 : -1;
-        
-        if ( colour == "white" ) {
-            for ( var i = 0; i < places.length; i++ ) {
-                if ( places[i].piece )
-                    places[i].disable_move();
-            }
-            if ( builds_mill(new_index, 1) )
-                enable_remove(true);
+        var msg = {
+            id: id,
+            /*  moving: actual_colour,  */
+            initial_pieces: initial_pieces.black.length,
+            remove: +(!!remove)
+        };
+        var board = [];
+        var has_piece, value;
+        for ( var i = 0; i < places.length; i++ ) {
+            has_piece = places[i].has_piece;
+            if ( !has_piece )
+                value = 0;
             else
-                load_script( "model/?board=" + board.toString() + "&phase=" + view.phase[1] );
+                value = numeric_colours[has_piece];
+            board[i] = value;
         }
-        else {
-            if ( builds_mill(new_index, -1) ) {
-                load_script( "model/?board=" + board.toString() + "&phase=remove" );
-                setTimeout(from_phase_to_phase, 1234);
-            }
-            else
-                from_phase_to_phase();
-        }
-    }; 
-    
-    
-    this.remove_piece = function (index, colour) {
-        board[index] = 0;
-        places[index].remove_piece();
-        if ( colour == "white" ) {
-            if ( view.phase == "begin" )
-                view.enable_set();
-            
-            view.status = "human";
-        }
-        else {
-            view.status = "wait";
-            if ( view.phase == "begin" )
-                setTimeout(load_script, 666, "model/?board=" + board.toString() + "&phase=" + view.phase);
-            else {
-                set_phase();
-                setTimeout(load_script, 666, "model/?board=" + board.toString() + "&phase=" + view.phase[1]);
-            }
-        }
-        view.en_dis_able_remove(false);
-        // count if 3 or less
-    };
-    
-    function from_phase_to_phase () {
-        set_phase();
-        if ( view.phase[0] == "move")
-            enable_moves();
+        //msg.board = board;
+        
+        var url = "model/?";
+        for ( var prop in msg )
+            url += "&" + prop + "=" + msg[prop];
+        url += "&board=" + board.toString();
+        
+        load_script (url);
+        
+        setTimeout(machine_move, RETARDITION, id, remove);
+    }
+    function toggle_actor () {
+        actual_colour = (actual_colour == "white") ? "black" : "white";
+        if ( actual_colour == human_colour )
+            human_move();
         else
-            enable_jumps();
+            machine_move(expected_answer_counter);
     }
     
-    this.set_piece = function (index, colour) {
-        if ( board[index] ) {
-            places[index].disable_set();
-            return false;
-        }
-        pieces_to_set[colour]--;
-        board[index] = (colour == "white") ? 1 : -1;
-        if ( colour == "black" && pieces_to_set[colour] <= 0 && view.phase == "begin" ) {
-            view.phase = "move";
-        }
-        var black_builds_mill;
-        if ( colour == "black" ) {
-            places[index].set_piece("black");
-            black_builds_mill = builds_mill(index, -1);
-            if ( black_builds_mill ) {
-                view.en_dis_able_remove(true);
-                load_script( "model/?board=" + board.toString() + "&phase=remove" );
-                if ( view.phase == "begin" )
-                    return true;
-            }
-            if ( view.phase == "begin" )
-                view.enable_set();
-            else {
-                if ( black_builds_mill )
-                    setTimeout(from_phase_to_phase, 1234);
-                else
-                    from_phase_to_phase();
-            }
-            view.status = "human";
-            return true;
-        }
-        view.status = "wait";
-        if ( builds_mill(index, 1) ) {
-            enable_remove(true);
-            return true;
-        }
-        load_script( "model/?board=" + board.toString() + "&phase=" + view.phase );
-        return true;
-    };
-    
+    function game_over (winner) {
+        indicate_thinking(winner + "_wins");
+        change_borders(winner);
+        console.log( winner + " wins!" );
+    }
     
     /**
      * Constructor
      */
-    for ( var i = 0; i < places.length; i++ )
-        board[i] = 0;
-    view.status = "human";
-    init_callback();
+    var places = generate_places();
+    var initial_pieces = {
+        white: generate_pieces("white"),
+        black: generate_pieces("black")
+    };
+    
+    window.rules = {
+        set_piece: function (place, id) {
+            if ( id != expected_answer_counter )
+                return;
+            expected_answer_counter++;
+            piece_set(place, machine_colour);
+        },
+        move_piece: function (from, to, id) {
+            if ( id != expected_answer_counter )
+                return;
+            expected_answer_counter++;
+            piece_moved(from, to, machine_colour);
+        },
+        remove_piece: function (place, id) {
+            if ( id != expected_answer_counter )
+                return;
+            expected_answer_counter++;
+            setTimeout(piece_removed, 1001, place, human_colour);
+        },
+        give_up: function (id) {
+            if ( id != expected_answer_counter )
+                return;
+            expected_answer_counter++;
+            game_over(human_colour);
+        }
+    };
+    
+    
+    if ( actual_colour == human_colour )
+        human_move();
+    else
+        machine_move(expected_answer_counter);
 }
+new Rules();

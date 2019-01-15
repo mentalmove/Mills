@@ -101,7 +101,7 @@
                 if ( $index % 2 == 0 && rand(0, 2) )
                     $index = -1;
             }
-            echo "rules.set_piece(" . $index . ", 'black');";
+            echo "rules.set_piece(" . $index . ", " . ID . ");";
         }
         private function move () {
             $black_pieces = $this->coloured_collection(Array(), -1);
@@ -160,9 +160,9 @@
                 }
             }
             if ( empty($found) )
-                echo "rules.game_end( 'white' );";
+                echo "rules.give_up( " . ID . " );";
             else
-                echo "rules.swap_pieces(" . $found[0] . ", " . $found[1] . ", 'black');";
+                echo "rules.move_piece(" . $found[0] . ", " . $found[1] . ", " . ID . ");";
         }
         private function jump () {
             $black_pieces = $this->coloured_collection(Array(), -1);
@@ -171,7 +171,7 @@
             if ( !empty($this->anticipated) && $wanted_black != -1 ) {
                 for ( $i = 0; $i < count($this->anticipated); $i++ ) {
                     if ( !in_array($black_pieces[$i], $this->anticipated) ) {
-                        echo "rules.swap_pieces(" . $black_pieces[$i] . ", " . $wanted_black . ", 'black');";
+                        echo "rules.move_piece(" . $black_pieces[$i] . ", " . $wanted_black . ", " . ID . ");";
                         return;
                     }
                 }
@@ -180,14 +180,14 @@
             if ( !empty($this->anticipated) && $unwanted_white != -1 ) {
                 for ( $i = 0; $i < count($this->anticipated); $i++ ) {
                     if ( !in_array($black_pieces[$i], $this->anticipated) ) {
-                        echo "rules.swap_pieces(" . $black_pieces[$i] . ", " . $unwanted_white . ", 'black');";
+                        echo "rules.move_piece(" . $black_pieces[$i] . ", " . $unwanted_white . ", " . ID . ");";
                         return;
                     }
                 }
             }
             $empties = $this->coloured_collection(Array(), 0);
             shuffle($empties);
-            echo "rules.swap_pieces(" . $black_pieces[0] . ", " . $empties[0] . ", 'black');";
+            echo "rules.move_piece(" . $black_pieces[0] . ", " . $empties[0] . ", " . ID . ");";
         }
         private function remove () {
             $collection = $this->not_in_mill_collection();
@@ -195,31 +195,35 @@
                 $collection = $this->coloured_collection();
             $random = rand(0, count($collection) - 1);
             $index = $collection[$random];
-            echo "rules.remove_piece(" . $index . ", 'white');";
+            echo "rules.remove_piece(" . $index . ", " . ID . ");";
         }
         
         
-        public function __construct ($board, $phase) {
+        public function __construct ($initial_pieces, $remove, $board) {
             $this->board = explode(",", $board);
-            switch ($phase) {
-                case "begin":
-                    $this->begin();
-                break;
-                case "move":
-                    $this->move();
-                break;
-                case "jump":
-                    $this->jump();
-                break;
-                case "remove":
-                    $this->remove();
-                break;
-                default:
-                    $this->reply("console.log", $board);
+            if ( $remove ) {
+                $this->remove();
+                return;
             }
+            if ( $initial_pieces ) {
+                $this->begin();
+                return;
+            }
+            $counter = 0;
+            for ( $i = 0; $i < count($this->board); $i++ ) {
+                if ( $this->board[$i] == -1 )
+                    $counter++;
+            }
+            if ( $counter > 3 ) {
+                $this->move();
+                return;
+            }
+            $this->jump();
         }
     }
     
-    if ( isset($_GET) && $_GET && isset($_GET['board']) && $_GET['board'] && isset($_GET['phase']) && $_GET['phase'] )
-        new NineMenSMorris($_GET['board'], $_GET['phase']);
+    if ( isset($_GET) && $_GET && isset($_GET['board']) && $_GET['board'] && isset($_GET['id']) && $_GET['id'] ) {
+        define("ID", $_GET['id']);
+        new NineMenSMorris($_GET['initial_pieces'], $_GET['remove'], $_GET['board']);
+    }
 ?>
