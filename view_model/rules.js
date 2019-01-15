@@ -1,1 +1,419 @@
-function Rules(m,a,b){var d={white:9,black:9};var l=[];var n=this;function o(q,p){var r,t,i,s;if(q%2){r=q%8;if(l[r]==p&&l[r+8]==p&&l[r+16]==p){return true}t=[(q-1),q,(q+1)];if(t[2]%8==0){t[2]-=8}if(l[t[0]]==p&&l[t[1]]==p&&l[t[2]]==p){return true}}else{i=Math.floor(q/8)*8;s=i+7;t=[(q-2),(q-1),q];while(t[0]<i){t[0]+=8}while(t[1]<i){t[1]+=8}if(l[t[0]]==p&&l[t[1]]==p&&l[t[2]]==p){return true}t=[q,(q+1),(q+2)];while(t[2]>s){t[2]-=8}while(t[1]>s){t[1]-=8}if(l[t[0]]==p&&l[t[1]]==p&&l[t[2]]==p){return true}}return false}function k(r){var p;var q=[];for(p=0;p<l.length;p++){if(l[p]!=-1){continue}if(r&&o(p,-1)){continue}q.push(p)}if(r&&!q.length){k(false);return}for(p=0;p<q.length;p++){a[q[p]].enable_remove()}m.en_dis_able_remove(true)}function j(){var p=0;var r=0;for(var q=0;q<l.length;q++){if(l[q]==1){p++}if(l[q]==-1){r++}}m.phase=["lost","lost"];if(p==3){m.phase[0]="jump"}if(r==3){m.phase[1]="jump"}if(p>3){m.phase[0]="move"}if(r>3){m.phase[1]="move"}if(m.phase[0]=="lost"){n.game_end("black");return}if(m.phase[1]=="lost"){n.game_end("white")}}function f(){var s={};var r=[];var p=[];var q;for(q=0;q<l.length;q++){if(l[q]==0){r.push(q);a[q].update_location();p.push(a[q].style.location)}}for(q=0;q<l.length;q++){if(l[q]!=1){continue}s[q]=r;a[q].update_location()}for(var t in s){a[parseInt(t)].enable_move(r,p)}}function h(){var x={};var r=0;var u,v,q,w,z,t,y,s;for(s=0;s<l.length;s++){if(l[s]!=1){continue}u=(s%8)?s-1:s+7;v=(s%8!=7)?s+1:s-7;q=-1;w=-1;if(s%2){if(s-8>=0){w=s-8}if(s+8<l.length){q=s+8}}t=[];if(!l[u]){t.push(u)}if(!l[v]){t.push(v)}if(q!=-1&&!l[q]){t.push(q)}if(w!=-1&&!l[w]){t.push(w)}if(t.length){x[s]=t;r++}}if(!r){n.game_end("black")}else{for(var p in x){a[parseInt(p)].update_location();t=[];y=[];for(s=0;s<x[p].length;s++){a[x[p][s]].update_location();t.push(a[x[p][s]].style.location);y.push(x[p][s])}a[parseInt(p)].enable_move(y,t)}}}this.game_end=function(i){m.game_end(i)};this.swap_pieces=function(s,p,r){m.status="wait";a[s].remove_piece();a[p].set_piece(r);l[s]=0;l[p]=(r=="white")?1:-1;if(r=="white"){for(var q=0;q<a.length;q++){if(a[q].piece){a[q].disable_move()}}if(o(p,1)){k(true)}else{g.search_move()}}else{if(o(p,-1)){g.remove_piece();setTimeout(c,1234)}else{c()}}};this.remove_piece=function(i,p){l[i]=0;a[i].remove_piece();if(p=="white"){if(m.phase=="begin"){m.enable_set()}m.status="human"}else{m.status="wait";if(m.phase=="begin"){setTimeout(g.search_move,666)}else{j();setTimeout(g.search_move,666)}}m.en_dis_able_remove(false)};function c(){j();if(m.phase[0]=="move"){h()}else{f()}}this.set_piece=function(p,q){if(l[p]){a[p].disable_set();return false}d[q]--;l[p]=(q=="white")?1:-1;if(q=="black"&&d[q]<=0&&m.phase=="begin"){m.phase="move"}var i;if(q=="black"){a[p].set_piece("black");i=o(p,-1);if(i){m.en_dis_able_remove(true);g.remove_piece();if(m.phase=="begin"){return true}}if(m.phase=="begin"){m.enable_set()}else{if(i){setTimeout(c,1234)}else{c()}}m.status="human";return true}m.status="wait";if(o(p,1)){k(true);return true}g.search_move();return true};for(var e=0;e<a.length;e++){l[e]=0}m.status="human";b();var g=new Delegate(this,l,d)};
+var human_colour = "white";
+var machine_colour = "black";
+
+function Rules () {
+    
+    var actual_colour = "white";
+    
+    var numeric_colours = {
+        white: 1,
+        black: -1
+    };
+    
+    var expected_answer_counter = 1;
+    
+    var RETARDITION = 150001;
+    
+    /*  */
+    
+    function get_jump_targets (sources, colour) {
+        var targets = [];
+        var has_piece;
+        for ( var i = 0; i < places.length; i++ ) {
+            has_piece = places[i].has_piece;
+            if ( !has_piece )
+                targets.push(places[i]);
+            else {
+                if ( sources && (!colour || colour == has_piece) )
+                    sources.push(places[i]);
+            }
+                
+        }
+        return targets;
+    }
+    function get_slides (colour) {
+        var slides = [];
+        var tmp, j;
+        for ( var i = 0; i < places.length; i++ ) {
+            if ( places[i].has_piece == colour ) {
+                tmp = [];
+                for ( j = 0; j < Library.neighbours[i].length; j++ ) {
+                    if ( !places[Library.neighbours[i][j]].has_piece )
+                        tmp.push( places[Library.neighbours[i][j]] );
+                }
+                if ( tmp.length )
+                    slides.push([places[i], tmp]);
+            }
+        }
+        return slides;
+    }
+    
+    function check_builds_mill (index, colour) {
+        var mills = Library.mills[index];
+        var j, result;
+        for ( var i = 0; i < mills.length; i++ ) {
+            result = 0;
+            for ( j = 0; j < 3; j++ ) {
+                if ( mills[i][j] == index )
+                    continue;
+                if ( places[mills[i][j]].has_piece && places[mills[i][j]].has_piece == colour )
+                    result++;
+                else
+                    break;
+            }
+            if ( result == 2 )
+                return true;
+        }
+        return false;
+    }
+    
+    /*  */
+    
+    function piece_removed (index, colour) {
+        
+        for ( var i = 0; i < places.length; i++ )
+            places[i].disable_remove();
+        
+        var validated = true;
+        if ( places[index].has_piece != colour )
+            validated = false;
+        if ( !validated ) {
+            enable_remove(colour);
+            return;
+        }
+        
+        places[index].remove_piece();
+        
+        var counter = 0;
+        for ( var i = 0; i < places.length; i++ ) {
+            if ( places[i].has_piece == colour )
+                counter++;
+        }
+        if ( (counter + initial_pieces[colour].length) < 3 ) {
+            game_over(actual_colour);
+            return;
+        }
+        
+        toggle_actor();
+    }
+    function enable_remove (colour) {
+        
+        indicate_thinking(actual_colour);
+        
+        var i;
+        
+        if ( actual_colour == human_colour ) {
+            var not_in_mill = [];
+            var is_in_mill = [];
+            var has_piece;
+            var other_colour = (actual_colour == "white") ? "black" : "white";
+            for ( var i = 0; i < places.length; i++ ) {
+                has_piece = places[i].has_piece;
+                if ( !has_piece || has_piece == actual_colour )
+                    continue;
+                if ( check_builds_mill(i, other_colour) )
+                    is_in_mill.push(places[i]);
+                else
+                    not_in_mill.push(places[i]);
+            }
+            var removable = (not_in_mill.length) ? not_in_mill : is_in_mill;
+            
+            if ( !removable.length ) {
+                game_over(actual_colour);
+                return;
+            }
+            
+            for ( var i = 0; i < removable.length; i++ )
+                removable[i].enable_remove(piece_removed);
+        }
+        else {
+            
+        }
+    }
+    
+    function piece_set (index, colour) {
+        
+        for ( var i = 0; i < places.length; i++ )
+            places[i].disable_set();
+        
+        var validated = true;
+        if ( !initial_pieces[colour] || !initial_pieces[colour].length )
+            validated = false;
+        if ( places[index].has_piece )
+            validated = false;
+        if ( !validated ) {
+            if ( colour == human_colour )
+                human_move();
+            else
+                machine_move(expected_answer_counter);
+            return;
+        }
+        
+        var builds_mill = check_builds_mill(index, colour);
+        
+        places[index].set_piece(initial_pieces[colour].pop());
+        if ( builds_mill ) {
+            var other_colour = (colour == "white") ? "black" : "white";
+            if ( colour == human_colour )
+                enable_remove(other_colour);
+            else
+                machine_move(expected_answer_counter, true);
+        }
+        else
+            toggle_actor();
+    }
+    function enable_set () {
+        var targets = get_jump_targets();
+        for ( var i = 0; i < targets.length; i++ )
+            targets[i].enable_set(piece_set);
+    }
+    
+    function piece_moved (source_index, target_index, colour, piece) {
+        
+        //console.log( source_index + " => " + target_index + " " + colour + "; human: " + (colour == human_colour) );
+        
+        if ( colour == human_colour ) {
+            var slides = get_slides(colour);
+            for ( var i = 0; i < slides.length; i++ )
+                slides[i][0].disable_move();
+            if ( piece ) {
+                places[source_index].unset_piece();
+                places[target_index].set_piece(piece);
+            }
+            else {
+                places[source_index].remove_piece(true);
+                places[target_index].set_piece(new Piece(colour));
+            }
+        }
+        else {
+            if ( !places[source_index] ) {
+                places[source_index].remove_piece(true);
+                places[target_index].set_piece(new Piece(colour));
+            }
+            else
+                places[source_index].move(places[target_index]);
+        }
+        
+        var builds_mill = check_builds_mill(target_index, colour);
+        if ( builds_mill ) {
+            if ( colour == human_colour )
+                enable_remove(machine_colour);
+            else
+                machine_move(expected_answer_counter, true);
+            return;
+        }
+        
+        setTimeout(toggle_actor, 41);
+    }
+    function enable_move () {
+        var slides = get_slides(human_colour);
+        if ( !slides.length ) {
+            game_over(machine_colour);
+            return;
+        }
+        for ( var i = 0; i < slides.length; i++ )
+            slides[i][0].enable_move(slides[i][1], piece_moved);
+    }
+    
+    function enable_jump () {
+        
+        var sources = [];
+        var targets = get_jump_targets(sources, human_colour);
+        
+        if ( sources.length > 3 ) {
+            enable_move();
+            return;
+        }
+        
+        for ( var i = 0; i < sources.length; i++ )
+            sources[i].enable_move(targets, piece_moved);
+    }
+    
+    /*  */
+    
+    function human_move () {
+        
+        indicate_thinking();
+        
+        if ( initial_pieces[human_colour].length ) {
+            enable_set();
+            return;
+        }
+        
+        var counter = 0;
+        for ( var i = 0; i < places.length; i++ ) {
+            if ( places[i].has_piece == human_colour )
+                counter++;
+        }
+        if ( counter < 3 ) {
+            game_over(machine_colour);
+            return;
+        }
+        if ( counter == 3 ) {
+            enable_jump(human_colour);
+            return;
+        }
+        enable_move(human_colour);
+    }
+    function machine_move (id, remove) {
+        
+        if ( expected_answer_counter != id )
+            return;
+        
+        indicate_thinking(machine_colour);
+        
+        var msg = {
+            id: id,
+            moving: actual_colour,
+            initial_pieces: [initial_pieces.white.length, initial_pieces.black.length],
+            remove: !!remove
+        };
+        var board = [];
+        var has_piece, value;
+        for ( var i = 0; i < places.length; i++ ) {
+            has_piece = places[i].has_piece;
+            if ( !has_piece )
+                value = 0;
+            else
+                value = numeric_colours[has_piece];
+            board[i] = value;
+        }
+        msg.board = board;
+        
+        ai.postMessage(msg);
+        
+        setTimeout(machine_move, RETARDITION, id, remove);
+    }
+    function toggle_actor () {
+        actual_colour = (actual_colour == "white") ? "black" : "white";
+        if ( actual_colour == human_colour )
+            human_move();
+        else
+            machine_move(expected_answer_counter);
+    }
+    
+    function game_over (winner) {
+        indicate_thinking(winner + "_wins");
+        change_borders(winner);
+        console.log( winner + " wins!" );
+    }
+    
+    /**
+     * Constructor
+     */
+    var places = generate_places();
+    var initial_pieces = {
+        white: generate_pieces("white"),
+        black: generate_pieces("black")
+    };
+    
+    var ai = new Worker( "model/ai.js" );
+    ai.onmessage = function ( event ) {
+        
+        if ( !event.data || event.data.id != expected_answer_counter )
+            return;
+        
+        console.log( event.data );
+        
+        expected_answer_counter++;
+        
+        switch (event.data.task) {
+            case "set_piece":
+                piece_set(event.data.place, machine_colour);
+            break;
+            case "move_piece":
+                piece_moved(event.data.from, event.data.to, machine_colour);
+            break;
+            case "jump_piece":
+                piece_moved(event.data.from, event.data.to, machine_colour);
+            break;
+            case "remove_piece":
+                setTimeout(piece_removed, 1001, event.data.place, human_colour);
+                //piece_removed(event.data.place, human_colour);
+            break;
+            case "give_up":
+                game_over(human_colour);
+            break;
+        }
+    };
+    
+    // [0, 0, 0, 0, 0, 0, -1, 1, -1, -1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0]
+    
+/*var test = [
+        0,
+  0,
+  0,
+  1,
+  -1,
+  1,
+  0,
+  0,
+  -1,
+        1,
+  0,
+  -1,
+  -1,
+  1,
+  0,
+  0,
+  -1,
+  1,
+  -1,
+  0,
+  -1,
+  1,
+  -1,
+  0
+];
+for ( var t = 0; t < test.length; t++ ) {
+    if ( !test[t] )
+        continue;
+    if ( test[t] > 0 )
+        places[t].set_piece(initial_pieces[human_colour].pop());
+    else
+        places[t].set_piece(initial_pieces[machine_colour].pop());
+}
+initial_pieces.white = [];
+initial_pieces.black = [];
+actual_colour = machine_colour;*/
+    
+    //places[0].set_piece(initial_pieces[machine_colour].pop());
+    //places[1].set_piece(initial_pieces[machine_colour].pop());
+    //places[2].set_piece(initial_pieces[machine_colour].pop());
+    //places[3].set_piece(initial_pieces[machine_colour].pop());
+    //places[14].set_piece(initial_pieces[machine_colour].pop());
+    
+    //places[8].set_piece(initial_pieces[human_colour].pop());
+    //places[9].set_piece(initial_pieces[human_colour].pop());
+    //places[10].set_piece(initial_pieces[human_colour].pop());
+    //places[12].set_piece(initial_pieces[human_colour].pop());
+    //places[13].set_piece(initial_pieces[human_colour].pop());
+    
+    /*places[0].set_piece(initial_pieces[human_colour].pop());
+    places[1].set_piece(initial_pieces[human_colour].pop());
+    places[2].set_piece(initial_pieces[machine_colour].pop());
+    places[3].set_piece(initial_pieces[machine_colour].pop());
+    places[4].set_piece(initial_pieces[human_colour].pop());
+    places[5].set_piece(initial_pieces[human_colour].pop());
+    places[6].set_piece(initial_pieces[machine_colour].pop());
+    places[7].set_piece(initial_pieces[machine_colour].pop());
+    
+    places[8].set_piece(initial_pieces[machine_colour].pop());
+    places[9].set_piece(initial_pieces[machine_colour].pop());
+    places[10].set_piece(initial_pieces[human_colour].pop());
+    places[11].set_piece(initial_pieces[human_colour].pop());
+    places[12].set_piece(initial_pieces[machine_colour].pop());
+    places[13].set_piece(initial_pieces[machine_colour].pop());
+    places[14].set_piece(initial_pieces[human_colour].pop());
+    places[15].set_piece(initial_pieces[human_colour].pop());
+    
+    places[16].set_piece(initial_pieces[human_colour].pop());
+    places[17].set_piece(initial_pieces[machine_colour].pop());*/
+    
+    
+    if ( actual_colour == human_colour )
+        human_move();
+    else
+        machine_move(expected_answer_counter);
+}
+new Rules();

@@ -1,1 +1,0 @@
-function JumpPiece(e,b,f,d){var c;this.set_begin=function(g){c=g};function a(l,n){var m=[];for(k=0;k<l.length;k++){if(l[k]==n){m.push(k)}}var p=[];var k,h,g,o;for(k=0;k<m.length;k++){o=[];g=[];for(h=0;h<l.length;h++){o[h]=l[h]}o[m[k]]=0;g=c.search_move(o,n,m[k]);for(h=0;h<g.length;h++){g[h].args.unshift(m[k]);p.push(g[h])}}return p}this.search_move=a};
