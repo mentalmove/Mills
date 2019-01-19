@@ -103,8 +103,7 @@ function show_board (places) {
     // Global???
     var symbols = {
         white: "o",
-        black: "x",
-        '?': " "
+        black: "x"
     };
     
     var i, ii;
@@ -127,9 +126,9 @@ function show_board (places) {
         has_piece = places[i].has_piece;
         ii = places[i].show_position;
         if ( !has_piece )
-            board[ ii[1] * 2 ][ ii[0] * 2 ] = "  ⋅";    // ⋅
+            board[ ii[1] * 2 ][ ii[0] * 2 ] = "  ⋅";    // .
         else
-            board[ ii[1] * 2 ][ ii[0] * 2 ] = "  " + symbols[has_piece];
+            board[ ii[1] * 2 ][ ii[0] * 2 ] = "  " + (symbols[has_piece] || has_piece);
     }
     
     console.log( "       (A)   (B)   (C)   (D)   (E)   (F)   (G)" );
@@ -294,11 +293,45 @@ function game_over (places, winner) {
     console.log( winner.toUpperCase() + " WINS" );
     
     for ( var i = 0; i < places.length; i++ ) {
-        if ( !places[i].has_piece )
-            places[i].set_piece(new Piece("?"));
+        if ( places[i].has_piece )
+            continue;
+        if ( i >= 8 && i < 16 && (i % 2) ) {
+            places[i].set_piece(new Piece("+"));
+            continue;
+        }
+        if ( !(i % 8) ) {
+            places[i].set_piece(new Piece("┌"));
+            continue;
+        }
+        if ( (i % 8) == 2 ) {
+            places[i].set_piece(new Piece("┐"));
+            continue;
+        }
+        if ( (i % 8) == 4 ) {
+            places[i].set_piece(new Piece("┘"));
+            continue;
+        }
+        if ( (i % 8) == 6 ) {
+            places[i].set_piece(new Piece("└"));
+            continue;
+        }
+        if ( (i % 20) == 1 ) {
+            places[i].set_piece(new Piece("┬"));
+            continue;
+        }
+        if ( (i % 20) == 3 ) {
+            places[i].set_piece(new Piece("┤"));
+            continue;
+        }
+        if ( (i % 12) == 5 ) {
+            places[i].set_piece(new Piece("┴"));
+            continue;
+        }
+        places[i].set_piece(new Piece("├"));
     }
     
     show_board(places);
+    process.exit();
 }
 
 /*  */

@@ -303,28 +303,6 @@ function main (h, m) {
         black: view.generate_pieces("black")
     };
     
-    /*places[0].set_piece(initial_pieces[human_colour].pop());
-    places[1].set_piece(initial_pieces[human_colour].pop());
-    places[2].set_piece(initial_pieces[machine_colour].pop());
-    places[3].set_piece(initial_pieces[machine_colour].pop());
-    
-    places[4].set_piece(initial_pieces[human_colour].pop());
-    places[5].set_piece(initial_pieces[machine_colour].pop());*/
-    
-    /*places[4].set_piece(initial_pieces[human_colour].pop());
-    places[5].set_piece(initial_pieces[human_colour].pop());
-    places[6].set_piece(initial_pieces[machine_colour].pop());
-    places[7].set_piece(initial_pieces[machine_colour].pop());
-    
-    places[8].set_piece(initial_pieces[machine_colour].pop());
-    places[9].set_piece(initial_pieces[machine_colour].pop());
-    places[10].set_piece(initial_pieces[human_colour].pop());
-    places[11].set_piece(initial_pieces[human_colour].pop());
-    places[12].set_piece(initial_pieces[machine_colour].pop());
-    places[13].set_piece(initial_pieces[machine_colour].pop());
-    places[14].set_piece(initial_pieces[human_colour].pop());
-    places[15].set_piece(initial_pieces[human_colour].pop());*/
-    
     if ( actual_colour == human_colour )
         human_move();
     else
