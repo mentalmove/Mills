@@ -1,85 +1,27 @@
-importScripts("../library/utilities.js");
-importScripts("set_piece.js");
-importScripts("move_piece.js");
-importScripts("jump_piece.js");
-importScripts("remove_piece.js");
+var calculation = require("./calculation.js");
+
+var id_callback, set_piece_callback, remove_piece_callback, move_piece_callback, give_up_callback;
+function define_id_callback (f) {
+    id_callback = f;
+}
+function define_set_piece_callback (f) {
+    set_piece_callback = f;
+}
+function define_remove_piece_callback (f) {
+    remove_piece_callback = f;
+}
+function define_move_piece_callback (f) {
+    move_piece_callback = f;
+}
+function define_give_up_callback (f) {
+    give_up_callback = f;
+}
 
 var callback_id;
-var execution_counter;
-var analise_counter;
-
 var colour_indices = {
     white: 0,
     black: 1
 };
-
-var i, j, k;
-var buffer = new ArrayBuffer(24);
-var indices = new Uint8Array(buffer);
-for ( i = 0; i < 24; i++ )
-    indices[i] = i;
-function randomise_indices () {
-    var random_index, tmp;
-    for ( var i = 0; i < 24; i++ ) {
-        random_index = Math.floor(Math.random() * 24);
-        if ( i == random_index )
-            continue;
-        tmp = indices[i];
-        indices[i] = indices[random_index];
-        indices[random_index] = tmp;
-    }
-}
-randomise_indices();
-
-var Mills = Array(24);
-var AlmostMills = Array(24);
-var tmp, tmp1, tmp2, tmp3, ni, n, na;
-for ( i = 0; i < 24; i++ ) {
-    Mills[i] = Array(2);
-    AlmostMills[i] = Array(6);
-    for ( j = 0; j < 2; j++ ) {
-        tmp = 0;
-        tmp1 = 0;
-        tmp2 = 0;
-        tmp3 = 0;
-        for ( k = 0; k < 3; k++ ) {
-            tmp |= 1 << Library.mills[i][j][k];
-            if ( k )
-                tmp1 |= 1 << Library.mills[i][j][k];
-            if ( k != 1 )
-                tmp2 |= 1 << Library.mills[i][j][k];
-            if ( k != 2 )
-                tmp3 |= 1 << Library.mills[i][j][k];
-        }
-        Mills[i][j] = tmp;
-        AlmostMills[i][j * 3] = tmp1;
-        AlmostMills[i][j * 3 + 1] = tmp2;
-        AlmostMills[i][j * 3 + 2] = tmp3;
-    }
-}
-var Neighbours = {};
-var AllNeighbours = {};
-for ( i = 0; i < 24; i++ ) {
-    ni = 1 << i;
-    n = Array(Library.neighbours[i].length);
-    na = 0;
-    for ( j = 0; j < Library.neighbours[i].length; j++ ) {
-        n[j] = 1 << Library.neighbours[i][j];
-        na |= n[j];
-    }
-    Neighbours[ni] = n;
-    AllNeighbours[ni] = na;
-}
-var Rings = [
-    255,
-    255 << 8,
-    255 << 16
-];
-var EvenRings = [
-    85,
-    85 << 8,
-    85 << 16
-];
 
 function convert (board) {
     var white_board = 0;
@@ -107,106 +49,15 @@ function convert (board) {
     };
 }
 
-/*  */
-
-function builds_mill (board, index) {
-    var mill;
-    for ( var i = 0; i < Mills[index].length; i++ ) {
-        mill = Mills[index][i];
-        if ( (mill & board) == mill )
-            return true;
-    }
-    return false;
-}
-function almost_builds_mill (enemy_board, joined_board, index) {
-    var mills = Mills[index];
-    var almost_mills = AlmostMills[index];
-    var result = [0, 0];
-    var i;
-    if ( !(mills[0] & enemy_board) && (mills[0] & joined_board) ) {
-        result[0] = 1;
-        for ( i = 0; i < 3; i++ ) {
-            if ( (almost_mills[i] & joined_board) == almost_mills[i] ) {
-                result[0] = 2;
-                break;
-            }
-        }
-    }
-    if ( !(mills[1] & enemy_board) && (mills[1] & joined_board) ) {
-        result[1] = 1;
-        for ( i = 3; i < 6; i++ ) {
-            if ( (almost_mills[i] & joined_board) == almost_mills[i] ) {
-                result[1] = 2;
-                break;
-            }
-        }
-    }
-    return result;
-}
-
-function analyse (white_board, black_board) {
-    
-    analise_counter++;
-    
-    var joined_board = white_board | black_board;
-    var result = 0;
-    
-    var factor, i, j, building_mills, own_board, enemy_board, fac;
-    
-    for ( i = 0; i < 24; i++ ) {
-        
-        fac = 1 << i;
-        
-        if ( !(joined_board & fac) )
-            continue;
-        
-        if ( white_board & fac ) {
-            result += 576;
-            factor = 1;
-            own_board = white_board;
-            enemy_board = black_board;
-        }
-        else {
-            result -= 576;
-            factor = -1;
-            own_board = black_board;
-            enemy_board = white_board;
-        }
-        
-        if ( !(i & 1) )
-            result += factor;
-        if ( i > 7 && i < 16 )
-            result += factor * 2;
-        
-        if ( builds_mill(own_board, i) )
-            result += factor * 24;
-        else {
-            building_mills = almost_builds_mill(enemy_board, joined_board, i);
-            if ( building_mills[0] )
-                result += factor * 13 * building_mills[0];
-            if ( building_mills[1] )
-                result += factor * 13 * building_mills[1];
-        }
-        
-        for ( j = 0; j < Library.neighbours[i].length; j++ ) {
-            if ( !(joined_board & (1 << Library.neighbours[i][j])) )
-                result += factor * 5;
-        }
-        /**
-         * For any reasons slower...
-         */
-        /*if ( AllNeighbours[fac] && (AllNeighbours[fac] & joined_board) != AllNeighbours[fac] ) {
-            for ( j = 0; j < Neighbours[fac].length; j++ ) {
-                if ( !(joined_board & Neighbours[fac][j]) )
-                    result += factor * 5;
-            }
-        }*/
-    }
-    
-    return result;
-}
-
-/*  */
+//var _set_piece = calculation._set_piece;
+//var _move_piece = calculation._move_piece;
+//var _jump_piece = calculation._jump_piece;
+//var _remove_piece = calculation._remove_piece;
+//var randomise_indices = calculation.randomise_indices;
+var Mills = calculation.Mills;
+var AllNeighbours = calculation.AllNeighbours;
+//var builds_mill = calculation.builds_mill;
+//var almost_builds_mill = calculation.almost_builds_mill;
 
 function jump_piece (colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces) {
     
@@ -214,30 +65,23 @@ function jump_piece (colour, white_board, black_board, white_pieces, black_piece
     if ( (colour == "white" && black_pieces <= 3) || (colour == "black" && white_pieces <= 3) )
         MAX = 2;
     
-    var result = _jump_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
+    var result = calculation.jump_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
     
-    var msg = {
-        task: "jump_piece",
-        from: result[0],
-        to: result[1],
-        id: callback_id
-    };
-    
-    postMessage(msg);
+    if ( id_callback )
+        id_callback(callback_id);
+    if ( move_piece_callback )
+        move_piece_callback(result[0], result[1]);
 }
 function remove_piece (colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces) {
     
     var MAX = 6;
     
-    var result = _remove_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
+    var result = calculation.remove_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
     
-    var msg = {
-        task: "remove_piece",
-        place: result,
-        id: callback_id
-    };
-    
-    postMessage(msg);
+    if ( id_callback )
+        id_callback(callback_id);
+    if ( remove_piece_callback )
+        remove_piece_callback(result);
 }
 function move_piece (colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces) {
     
@@ -252,7 +96,7 @@ function move_piece (colour, white_board, black_board, white_pieces, black_piece
     for ( i = 0; i < 24; i++ ) {
         if ( !(own_board & (1 << i)) )
             continue;
-        almost_builds_mill_tester = almost_builds_mill(enemy_board, joined_board, i);
+        almost_builds_mill_tester = calculation.almost_builds_mill(enemy_board, joined_board, i);
         if ( almost_builds_mill_tester[0] != 2 && almost_builds_mill_tester[1] != 2 )
             continue;
         probably_builds_mill = true;
@@ -263,8 +107,8 @@ function move_piece (colour, white_board, black_board, white_pieces, black_piece
         for ( i = 0; i < 24; i++ ) {
             if ( !(enemy_board & (1 << i)) )
                 continue;
-            almost_builds_mill_tester = almost_builds_mill(own_board, joined_board, i);
-            if ( builds_mill(enemy_board, i) || (almost_builds_mill_tester[0] != 2 && almost_builds_mill_tester[1] != 2) )
+            almost_builds_mill_tester = calculation.almost_builds_mill(own_board, joined_board, i);
+            if ( calculation.builds_mill(enemy_board, i) || (almost_builds_mill_tester[0] != 2 && almost_builds_mill_tester[1] != 2) )
                 continue;
             if ( almost_builds_mill_tester[0] == 2 ) {
                 fac = (Mills[i][0] & enemy_board) ^ Mills[i][0];
@@ -283,84 +127,58 @@ function move_piece (colour, white_board, black_board, white_pieces, black_piece
         }
     }
     
-    var result = _move_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
+    var result = calculation.move_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
     
-    if ( result == -1 ) {
-        var msg = {
-            task: "give_up",
-            id: callback_id
-        };
-    }
+    if ( id_callback )
+        id_callback(callback_id);
+    
+    if ( result == -1 )
+        give_up_callback();
     else {
-        var msg = {
-            task: "move_piece",
-            from: result[0],
-            to: result[1],
-            id: callback_id
-        };
+        if ( move_piece_callback )
+            move_piece_callback(result[0], result[1]);
     }
-    
-    
-    postMessage(msg);
 }
-function set_piece (colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces) {
+function set_piece (colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, give_up) {
     
     var MAX = 6;
     
-    /*var own_board, enemy_board;
-    if ( colour == "white" ) {
-        own_board = white_board;
-        enemy_board = black_board;
+    var r = calculation.set_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX);
+    if ( !r ) {
+        give_up_callback();
+        return;
     }
-    else {
-        own_board = black_board;
-        enemy_board = white_board;
-    }
-    for ( var i = 0; i < 3; i++ ) {
-        if ( (EvenRings[i] & enemy_board) && !(Rings[i] & own_board) ) {
-            MAX++;
-            break;
-        }
-    }
-    console.log( MAX );*/
     
-    var result = _set_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
+    var result = r[1];
     
-    var msg = {
-        task: "set_piece",
-        place: result,
-        id: callback_id
-    };
-    
-    postMessage(msg);
+    if ( id_callback )
+        id_callback(callback_id);
+    if ( set_piece_callback )
+        set_piece_callback(result);
 }
-
-onmessage = function (event) {
+function sendMessage (data) {
     
-    callback_id = event.data.id;
-    var colour = event.data.moving;
+    callback_id = data.id;
+    var colour = data.moving;
     
-    var converted = convert(event.data.board);
+    var converted = convert(data.board);
     
-    var fnc = (event.data.remove) ? remove_piece : null;
+    var fnc = (data.remove) ? remove_piece : null;
     if ( !fnc ) {
-        if ( event.data.initial_pieces[colour_indices[colour]] )
+        if ( data.initial_pieces[colour_indices[colour]] )
             fnc = set_piece;
         else
             fnc = (converted.pieces[colour] == 3) ? jump_piece : move_piece;
     }
     
-    console.log( event.data );
-    
-    execution_counter = 0;
-    analise_counter = 0;
-    var start_time = (new Date()).getTime();
-    
-    fnc(colour, converted.white_board, converted.black_board, converted.pieces.white, converted.pieces.black, event.data.initial_pieces[0], event.data.initial_pieces[1]);
-    
-    console.log( "Analised: " + analise_counter + " ; executed: " +  execution_counter);
-    var end_time = (new Date()).getTime();
-    console.log( "Execution duration: " + ((end_time - start_time) / 1000) );
-    
-    setTimeout(randomise_indices, 17);
+    fnc(colour, converted.white_board, converted.black_board, converted.pieces.white, converted.pieces.black, data.initial_pieces[0], data.initial_pieces[1]);
+}
+
+module.exports = {
+    sendMessage: sendMessage,
+    define_id_callback: define_id_callback,
+    define_set_piece_callback: define_set_piece_callback,
+    define_remove_piece_callback: define_remove_piece_callback,
+    define_move_piece_callback: define_move_piece_callback,
+    define_give_up_callback: define_give_up_callback
 };
