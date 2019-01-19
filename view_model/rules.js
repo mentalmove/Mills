@@ -256,7 +256,7 @@ function machine_move (id, remove) {
 
     ai.sendMessage(msg);
 
-    //setTimeout(machine_move, RETARDITION, id, remove);
+    setTimeout(machine_move, RETARDITION, id, remove);
 }
 function id_callback () {
     expected_answer_counter++;
