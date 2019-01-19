@@ -324,7 +324,17 @@ function set_piece (colour, white_board, black_board, white_pieces, black_pieces
     }
     console.log( MAX );*/
     
-    var result = _set_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX)[1];
+    var r = _set_piece(-1, colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces, MAX);
+    if ( !r ) {
+        var msg = {
+            task: "give_up",
+            id: callback_id
+        };
+        postMessage(msg);
+        return;
+    }
+    
+    var result = r[1];
     
     var msg = {
         task: "set_piece",

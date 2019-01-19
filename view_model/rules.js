@@ -31,11 +31,11 @@ function Rules () {
         }
         return targets;
     }
-    function get_slides (colour) {
+    function get_slides () {
         var slides = [];
         var tmp, j;
         for ( var i = 0; i < places.length; i++ ) {
-            if ( places[i].has_piece == colour ) {
+            if ( places[i].has_piece == human_colour ) {
                 tmp = [];
                 for ( j = 0; j < Library.neighbours[i].length; j++ ) {
                     if ( !places[Library.neighbours[i][j]].has_piece )
@@ -171,7 +171,7 @@ function Rules () {
     function piece_moved (source_index, target_index, colour, piece) {
         
         if ( colour == human_colour ) {
-            var slides = get_slides(colour);
+            var slides = get_slides();
             for ( var i = 0; i < slides.length; i++ )
                 slides[i][0].disable_move();
             if ( piece ) {
@@ -204,7 +204,7 @@ function Rules () {
         setTimeout(toggle_actor, 41);
     }
     function enable_move () {
-        var slides = get_slides(human_colour);
+        var slides = get_slides();
         if ( !slides.length ) {
             game_over(machine_colour);
             return;
@@ -248,10 +248,10 @@ function Rules () {
             return;
         }
         if ( counter == 3 ) {
-            enable_jump(human_colour);
+            enable_jump();
             return;
         }
-        enable_move(human_colour);
+        enable_move();
     }
     function machine_move (id, remove) {
         
@@ -327,7 +327,6 @@ function Rules () {
             break;
             case "remove_piece":
                 setTimeout(piece_removed, 1001, event.data.place, human_colour);
-                //piece_removed(event.data.place, human_colour);
             break;
             case "give_up":
                 game_over(human_colour);
