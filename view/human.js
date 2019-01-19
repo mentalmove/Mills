@@ -158,6 +158,8 @@ var Human = (function (playground) {
             element.cloned.style.top = (pageY - size.center_y) + "px";
         }
         function end (pageX, pageY) {
+            if ( !targets || !targets.length )
+                return;
             var rect;
             for ( var i = 0; i < targets.length; i++ ) {
                 rect = targets[i].tell_area();
