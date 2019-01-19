@@ -49,15 +49,8 @@ function convert (board) {
     };
 }
 
-//var _set_piece = calculation._set_piece;
-//var _move_piece = calculation._move_piece;
-//var _jump_piece = calculation._jump_piece;
-//var _remove_piece = calculation._remove_piece;
-//var randomise_indices = calculation.randomise_indices;
 var Mills = calculation.Mills;
 var AllNeighbours = calculation.AllNeighbours;
-//var builds_mill = calculation.builds_mill;
-//var almost_builds_mill = calculation.almost_builds_mill;
 
 function jump_piece (colour, white_board, black_board, white_pieces, black_pieces, initial_white_pieces, initial_black_pieces) {
     
