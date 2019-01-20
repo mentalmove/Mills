@@ -27,3 +27,13 @@ On the other hand, it enables to treat different sections separately what might 
 **[Javascript Browser Version](https://github.com/mentalmove/Mills/tree/master)** and **[Console Version](https://github.com/mentalmove/Mills/tree/Console)** share (almost) the same **Model**, having different **Views**.        
 **[PHP Browser Version](https://github.com/mentalmove/Mills/tree/PHP)** and **Javascript Browser Version** share exactly the same **View**, having different **Models**.        
 All versions have at least more or less the same **ViewModel** in common.
+
+&nbsp;
+
+### Usage of Javascript Browser Version (branch _master_)
+
+- Download project and execute file _index.html_ in a browser of your choice
+
+**OR**
+
+- Click **[above link](https://mentalmove.github.io/Mills/)**
