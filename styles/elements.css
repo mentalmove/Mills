@@ -3,6 +3,10 @@ html, body {
     background: linear-gradient(-60deg, #AAAAAA, #D6D6D5);
     margin: 0px;
     height: 100%;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 #base {
