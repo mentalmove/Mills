@@ -251,7 +251,7 @@ html, body {
     opacity: 0;
     transition: all 8s 4s;
 }
-@media only screen and (max-device-width: 768px) {
+@media only screen and (max-width: 768px) {
     .github {
         visibility: hidden;
     }
