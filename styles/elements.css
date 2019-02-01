@@ -240,3 +240,19 @@ html, body {
 .piece.rather_slow {
     transition: all 1s;
 }
+
+.github {
+    position: absolute;
+    right: 16px;
+    bottom: 9px;
+    color: #EAEAE9;
+    text-decoration: none;
+    display: none;
+    opacity: 0;
+    transition: all 8s 4s;
+}
+@media only screen and (max-device-width: 768px) {
+    .github {
+        visibility: hidden;
+    }
+}

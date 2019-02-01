@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
 <!--
-    x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
-    x  0  -  -  -  -  -  1  -  -  -  -  -  2  x
-    x  |  x  x  x  x  x  |  x  x  x  x  x  |  x
-    x  |  x  8  -  -  -  9  -  -  -  10 x  |  x
-    x  |  x  |  x  x  x  |  x  x  x  |  x  |  x
-    x  |  x  |  x  16 -  17 -  18 x  |  x  |  x
-    x  |  x  |  x  |  x  x  x  |  x  |  x  |  x
-    x  7  -  15 -  23 x  x  x  19 -  11 -  3  x
-    x  |  x  |  x  |  x  x  x  |  x  |  x  |  x
-    x  |  x  |  x  22 -  21 -  20 x  |  x  |  x
-    x  |  x  |  x  x  x  |  x  x  x  |  x  |  x
-    x  |  x  14 x  x  x  13 x  x  x  12 -  |  x
-    x  |  x  x  x  x  x  |  x  x  x  x  x  |  x
-    x  6  -  -  -  -  -  5  -  -  -  -  -  4  x
-    x  x  x  x  x  x  x  x  x  x  x  x  x  x  x
+    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    .  0  -  -  -  -  -  1  -  -  -  -  -  2  .
+    .  |  .  .  .  .  .  |  .  .  .  .  .  |  .
+    .  |  .  8  -  -  -  9  -  -  -  10 .  |  .
+    .  |  .  |  .  .  .  |  .  .  .  |  .  |  .
+    .  |  .  |  .  16 -  17 -  18 .  |  .  |  .
+    .  |  .  |  .  |  .  .  .  |  .  |  .  |  .
+    .  7  -  15 -  23 .  .  .  19 -  11 -  3  .
+    .  |  .  |  .  |  .  .  .  |  .  |  .  |  .
+    .  |  .  |  .  22 -  21 -  20 .  |  .  |  .
+    .  |  .  |  .  .  .  |  .  .  .  |  .  |  .
+    .  |  .  14 .  .  .  13 .  .  .  12 -  |  .
+    .  |  .  .  .  .  .  |  .  .  .  .  .  |  .
+    .  6  -  -  -  -  -  5  -  -  -  -  -  4  .
+    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 -->
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -45,21 +45,21 @@
         
         <script type="text/javascript" src="view_model/rules.js"></script>
         
-        
+        <!--
+            /*  Online only ************************************************* */
+        -->
+        <a class="github" href="https://github.com/mentalmove/Mills">View Project on GitHub</a>
         <script type="text/javascript">
-            if ( window.location && location.href && location.href.indexOf("github") != -1 ) { // Online only
-                var link = document.createElement("a");
-                link.style.position = "absolute";
-                link.style.right = "16px";
-                link.style.bottom = "9px";
-                link.href = "https://github.com/mentalmove/Mills";
-                var inner = document.createElement("span");
-                inner.innerHTML = "View Project on GitHub";
-                inner.style.color = "#EAEAE9";
-                link.style.textDecoration = "none";
-                link.appendChild(inner);
-                document.body.appendChild(link);
+            if ( window.location && location.href && location.href.indexOf("github") != -1 ) {
+                var links = document.getElementsByClassName("github");
+                if ( links && links.length ) {
+                    links[0].style.display = "block";
+                    setTimeout(function (el) {
+                        el.style.opacity = 1;
+                    }, 41, links[0]);
+                }
             }
+            /*  Online only ************************************************* */
         </script>
         
     </body>
