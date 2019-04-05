@@ -12,7 +12,7 @@ function Rules () {
     
     var expected_answer_counter = 1;
     
-    var RETARDITION = 150001;
+    var RETARDITION = 12001;
     
     /*  */
     
@@ -94,7 +94,7 @@ function Rules () {
             return;
         }
         
-        toggle_actor();
+        setTimeout(toggle_actor, 161);
     }
     function enable_remove (colour) {
         
